@@ -1,0 +1,8 @@
+.idea
+node_modules
+npm-debug.log
+*.js.map
+test/output
+yarn.lock
+.DS_Store
+.env
