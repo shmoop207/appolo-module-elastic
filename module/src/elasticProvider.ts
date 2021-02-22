@@ -62,6 +62,27 @@ export class ElasticProvider {
         return this.searchByQueryBuilder(bodybuilder(), opts);
     }
 
+    public async searchByAllMulti<T>(params: IElasticSearchParams[]): Promise<IElasticResult<T>> {
+
+        let queries = params.map(item => [{index: item.index}, this._buildQuery(bodybuilder(), item)]);
+
+        try {
+
+            const response = await this.client.msearch({
+                body: _.flatten(queries)
+            });
+
+            return {
+                results: response.body.hits.hits.map(x => ({_id: x._id, ...x._source})),
+                total: response.body.hits.total.value
+            };
+        } catch (e) {
+            this.logger.error(`failed to to run elastic search`, {params: JSON.stringify(params), e});
+            throw e;
+        }
+
+    }
+
     public searchByQuery<T>(opts: { query: string, searchField: string } & IElasticSearchParams): Promise<IElasticResult<T>> {
 
         let queryBuild = bodybuilder().query("match", opts.searchField, opts.query);
