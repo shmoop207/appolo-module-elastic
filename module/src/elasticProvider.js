@@ -48,10 +48,10 @@ let ElasticProvider = class ElasticProvider {
             const response = await this.client.msearch({
                 body: _.flatten(queries)
             });
-            return {
-                results: response.body.hits.hits.map(x => (Object.assign({ _id: x._id }, x._source))),
-                total: response.body.hits.total.value
-            };
+            return response.body.responses.map(res => ({
+                total: res.hits.total.value,
+                results: res.hits.hits.map(x => Object.assign({ _id: x._id }, x._source))
+            }));
         }
         catch (e) {
             this.logger.error(`failed to to run elastic search`, { params: JSON.stringify(params), e });
