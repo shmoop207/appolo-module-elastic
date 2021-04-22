@@ -133,6 +133,10 @@ export class ElasticProvider {
         return this.search(opts.index, query);
     }
 
+    public buildQuery(queryBuilder: bodybuilder.Bodybuilder, opts: IElasticSearchParams): object {
+        return this._buildQuery(queryBuilder, opts);
+    }
+
     private _buildQuery(queryBuilder: bodybuilder.Bodybuilder, opts: IElasticSearchParams): object {
         let {fields, pageSize, page, sort, filter, range} = opts;
 

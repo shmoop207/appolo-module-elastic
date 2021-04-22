@@ -86,6 +86,9 @@ let ElasticProvider = class ElasticProvider {
         let query = this._buildQuery(queryBuilder, opts);
         return this.search(opts.index, query);
     }
+    buildQuery(queryBuilder, opts) {
+        return this._buildQuery(queryBuilder, opts);
+    }
     _buildQuery(queryBuilder, opts) {
         let { fields, pageSize, page, sort, filter, range } = opts;
         pageSize && queryBuilder.size(pageSize);
