@@ -2,9 +2,9 @@ import {define, inject, singleton, alias, init} from "@appolo/inject";
 import {Client, RequestParams} from '@elastic/elasticsearch';
 import {IElasticResult, IElasticSearchParams, IOptions} from "./interfaces";
 import * as bodybuilder from 'bodybuilder';
-import * as _ from 'lodash';
-import * as moment from 'moment';
 import {ILogger} from '@appolo/logger';
+import {date} from '@appolo/date';
+import {Arrays,Strings,Objects} from '@appolo/utils';
 
 @define()
 @singleton()
@@ -69,7 +69,7 @@ export class ElasticProvider {
         try {
 
             const response = await this.client.msearch({
-                body: _.flatten(queries)
+                body: Arrays.flat(queries)
             });
 
 
@@ -147,11 +147,11 @@ export class ElasticProvider {
             queryBuilder.rawOption("_source", {"includes": fields})
         }
 
-        _.forEach(opts.sort, (item, key) => {
+        Arrays.forEach(opts.sort, (item, key) => {
             queryBuilder.sort(item.field, item.dir)
         });
 
-        _.forEach(filter, (item, key) => {
+        Arrays.forEach(filter, (item, key) => {
 
             if (item.type == "terms") {
                 queryBuilder.andFilter("terms", item.field, item.value);
@@ -162,7 +162,7 @@ export class ElasticProvider {
 
         });
 
-        _.forEach(range, item => {
+        Arrays.forEach(range, item => {
 
             queryBuilder.andFilter("range", item.field, {
                 "gte": item.from,
@@ -185,7 +185,7 @@ export class ElasticProvider {
                             "must": {
                                 "range": {
                                     [opts.field]: {
-                                        "lte": moment().utc().subtract(opts.seconds, "seconds").format(opts.format)
+                                        "lte": date().utc().subtract(opts.seconds, "seconds").format(opts.format)
                                     }
                                 }
                             }
@@ -243,7 +243,7 @@ export class ElasticProvider {
         await this.client.create({
             id: id,
             index: index,
-            body: _.omit(item, ["_id", "id"])
+            body: Objects.omit(item, "_id" as any, "id")
         })
     }
 
@@ -273,7 +273,7 @@ export class ElasticProvider {
         await this.client.update({
             id: id,
             index: index,
-            body: {doc: _.omit(item, ["_id", "id"])}
+            body: {doc: Objects.omit(item, "_id" as any, "id")}
         })
     }
 }

@@ -5,8 +5,8 @@ const tslib_1 = require("tslib");
 const inject_1 = require("@appolo/inject");
 const elasticsearch_1 = require("@elastic/elasticsearch");
 const bodybuilder = require("bodybuilder");
-const _ = require("lodash");
-const moment = require("moment");
+const date_1 = require("@appolo/date");
+const utils_1 = require("@appolo/utils");
 let ElasticProvider = class ElasticProvider {
     get client() {
         return this._client;
@@ -46,7 +46,7 @@ let ElasticProvider = class ElasticProvider {
         let queries = params.map(item => [{ index: item.index }, this._buildQuery(bodybuilder(), item)]);
         try {
             const response = await this.client.msearch({
-                body: _.flatten(queries)
+                body: utils_1.Arrays.flat(queries)
             });
             return response.body.responses.map(res => ({
                 total: res.hits.total.value,
@@ -96,10 +96,10 @@ let ElasticProvider = class ElasticProvider {
         if (fields && fields.length) {
             queryBuilder.rawOption("_source", { "includes": fields });
         }
-        _.forEach(opts.sort, (item, key) => {
+        utils_1.Arrays.forEach(opts.sort, (item, key) => {
             queryBuilder.sort(item.field, item.dir);
         });
-        _.forEach(filter, (item, key) => {
+        utils_1.Arrays.forEach(filter, (item, key) => {
             if (item.type == "terms") {
                 queryBuilder.andFilter("terms", item.field, item.value);
             }
@@ -107,7 +107,7 @@ let ElasticProvider = class ElasticProvider {
                 queryBuilder.andFilter("term", item.field, item.value);
             }
         });
-        _.forEach(range, item => {
+        utils_1.Arrays.forEach(range, item => {
             queryBuilder.andFilter("range", item.field, {
                 "gte": item.from,
                 "lte": item.to,
@@ -127,7 +127,7 @@ let ElasticProvider = class ElasticProvider {
                             "must": {
                                 "range": {
                                     [opts.field]: {
-                                        "lte": moment().utc().subtract(opts.seconds, "seconds").format(opts.format)
+                                        "lte": date_1.date().utc().subtract(opts.seconds, "seconds").format(opts.format)
                                     }
                                 }
                             }
@@ -173,7 +173,7 @@ let ElasticProvider = class ElasticProvider {
         await this.client.create({
             id: id,
             index: index,
-            body: _.omit(item, ["_id", "id"])
+            body: utils_1.Objects.omit(item, "_id", "id")
         });
     }
     async delete(index, id) {
@@ -195,7 +195,7 @@ let ElasticProvider = class ElasticProvider {
         await this.client.update({
             id: id,
             index: index,
-            body: { doc: _.omit(item, ["_id", "id"]) }
+            body: { doc: utils_1.Objects.omit(item, "_id", "id") }
         });
     }
 };
