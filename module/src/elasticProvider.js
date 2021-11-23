@@ -100,12 +100,7 @@ let ElasticProvider = class ElasticProvider {
             queryBuilder.sort(item.field, item.dir);
         });
         utils_1.Arrays.forEach(filter, (item, key) => {
-            if (item.type == "terms") {
-                queryBuilder.andFilter("terms", item.field, item.value);
-            }
-            else {
-                queryBuilder.andFilter("term", item.field, item.value);
-            }
+            queryBuilder.andFilter(item.type || "term", item.field, item.value);
         });
         utils_1.Arrays.forEach(range, item => {
             queryBuilder.andFilter("range", item.field, {

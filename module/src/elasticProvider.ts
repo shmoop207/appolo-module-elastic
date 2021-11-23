@@ -4,7 +4,7 @@ import {IElasticResult, IElasticSearchParams, IOptions} from "./interfaces";
 import * as bodybuilder from 'bodybuilder';
 import {ILogger} from '@appolo/logger';
 import {date} from '@appolo/date';
-import {Arrays,Strings,Objects} from '@appolo/utils';
+import {Arrays, Strings, Objects} from '@appolo/utils';
 
 @define()
 @singleton()
@@ -153,13 +153,7 @@ export class ElasticProvider {
 
         Arrays.forEach(filter, (item, key) => {
 
-            if (item.type == "terms") {
-                queryBuilder.andFilter("terms", item.field, item.value);
-            } else {
-                queryBuilder.andFilter("term", item.field, item.value);
-            }
-
-
+            queryBuilder.andFilter(item.type || "term", item.field, item.value);
         });
 
         Arrays.forEach(range, item => {
