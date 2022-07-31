@@ -19,7 +19,7 @@ let ElasticModule = ElasticModule_1 = class ElasticModule extends engine_1.Modul
     }
 };
 ElasticModule = ElasticModule_1 = tslib_1.__decorate([
-    engine_1.module()
+    (0, engine_1.module)()
 ], ElasticModule);
 exports.ElasticModule = ElasticModule;
 //# sourceMappingURL=elasticModule.js.map

@@ -21,12 +21,16 @@ let ElasticProvider = class ElasticProvider {
         const response = await this.client.sql.query({
             body: { query },
         });
-        const keys = response.body.columns.map(c => c.name);
-        return response.body.rows.map(r => {
-            const res = {};
-            keys.forEach((key, i) => res[key] = r[i]);
-            return res;
-        });
+        let items = [];
+        for (let i = 0; i < response.rows.length; i++) {
+            let row = response.rows[i], dto = {};
+            for (let j = 0; j < response.columns.length; j++) {
+                let col = response.columns[j];
+                dto[col.name] = row[j];
+            }
+            items.push(dto);
+        }
+        return items;
     }
     async getById(opts) {
         let dto = {
@@ -36,8 +40,8 @@ let ElasticProvider = class ElasticProvider {
         if (opts.fields && opts.fields.length) {
             dto.body["_source"] = { "includes": opts.fields };
         }
-        let { body } = await this.client.get(dto);
-        return body;
+        let { _source } = await this.client.get(dto);
+        return _source;
     }
     searchByAll(opts) {
         return this.searchByQueryBuilder(bodybuilder(), opts);
@@ -48,8 +52,9 @@ let ElasticProvider = class ElasticProvider {
             const response = await this.client.msearch({
                 body: utils_1.Arrays.flat(queries)
             });
-            return response.body.responses.map(res => ({
-                total: res.hits.total.value,
+            let responses = response.responses;
+            return responses.map((res) => ({
+                total: utils_1.Numbers.isNumber(res.hits.total) ? res.hits.total : res.hits.total.value,
                 results: res.hits.hits.map(x => Object.assign({ _id: x._id }, x._source))
             }));
         }
@@ -112,26 +117,25 @@ let ElasticProvider = class ElasticProvider {
     }
     async deleteByTime(opts) {
         try {
-            let params = {
+            let result = await this.client.deleteByQuery({
                 index: opts.index,
                 conflicts: "proceed",
                 wait_for_completion: false,
                 body: {
-                    "query": {
-                        "bool": {
-                            "must": {
-                                "range": {
+                    query: {
+                        bool: {
+                            must: {
+                                range: {
                                     [opts.field]: {
-                                        "lte": date_1.date().utc().subtract(opts.seconds, "seconds").format(opts.format)
+                                        "lte": (0, date_1.date)().utc().subtract(opts.seconds, "seconds").format(opts.format)
                                     }
                                 }
                             }
-                        }
+                        },
                     }
                 }
-            };
-            let { body } = await this.client.deleteByQuery(params);
-            return body;
+            });
+            return result;
         }
         catch (e) {
             this.logger.error(`failed to delete by time `, { e, opts });
@@ -148,8 +152,8 @@ let ElasticProvider = class ElasticProvider {
                 body: params
             });
             return {
-                results: response.body.hits.hits.map(x => (Object.assign({ _id: x._id }, x._source))),
-                total: response.body.hits.total.value
+                results: response.hits.hits.map(x => (Object.assign({ _id: x._id }, x._source))),
+                total: utils_1.Numbers.isNumber(response.hits.total) ? response.hits.total : response.hits.total.value
             };
         }
         catch (e) {
@@ -162,7 +166,7 @@ let ElasticProvider = class ElasticProvider {
             id: id,
             index: index,
         });
-        return doc.body;
+        return doc;
     }
     async create(index, id, item) {
         await this.client.create({
@@ -195,17 +199,17 @@ let ElasticProvider = class ElasticProvider {
     }
 };
 tslib_1.__decorate([
-    inject_1.inject()
+    (0, inject_1.inject)()
 ], ElasticProvider.prototype, "moduleOptions", void 0);
 tslib_1.__decorate([
-    inject_1.inject()
+    (0, inject_1.inject)()
 ], ElasticProvider.prototype, "logger", void 0);
 tslib_1.__decorate([
-    inject_1.init()
+    (0, inject_1.init)()
 ], ElasticProvider.prototype, "initialize", null);
 ElasticProvider = tslib_1.__decorate([
-    inject_1.define(),
-    inject_1.singleton()
+    (0, inject_1.define)(),
+    (0, inject_1.singleton)()
 ], ElasticProvider);
 exports.ElasticProvider = ElasticProvider;
 //# sourceMappingURL=elasticProvider.js.map

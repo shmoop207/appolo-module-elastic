@@ -1,10 +1,11 @@
 import {define, inject, singleton, alias, init} from "@appolo/inject";
-import {Client, RequestParams} from '@elastic/elasticsearch';
+import {Client} from '@elastic/elasticsearch';
 import {IElasticResult, IElasticSearchParams, IOptions} from "./interfaces";
 import * as bodybuilder from 'bodybuilder';
 import {ILogger} from '@appolo/logger';
 import {date} from '@appolo/date';
-import {Arrays, Strings, Objects} from '@appolo/utils';
+import {Arrays, Strings, Objects, Numbers} from '@appolo/utils';
+import {MsearchMultiSearchItem} from "@elastic/elasticsearch/lib/api/types";
 
 @define()
 @singleton()
@@ -32,13 +33,21 @@ export class ElasticProvider {
             body: {query},
         });
 
-        const keys = response.body.columns.map(c => c.name);
+        let items: T[] = [];
 
-        return response.body.rows.map(r => {
-            const res = {};
-            keys.forEach((key, i) => res[key] = r[i]);
-            return res;
-        });
+        for (let i = 0; i < response.rows.length; i++) {
+            let row = response.rows[i], dto: any = {};
+            for (let j = 0; j < response.columns.length; j++) {
+
+                let col = response.columns[j];
+
+                dto[col.name] = row[j]
+            }
+            items.push(dto);
+        }
+
+        return items;
+
     }
 
     public async getById<T>(opts: { id: string, index: string, fields?: string[] }): Promise<T> {
@@ -52,9 +61,9 @@ export class ElasticProvider {
             dto.body["_source"] = {"includes": opts.fields};
         }
 
-        let {body} = await this.client.get(dto);
+        let {_source} = await this.client.get(dto);
 
-        return body as T
+        return _source as T
     }
 
     public searchByAll<T>(opts: IElasticSearchParams): Promise<IElasticResult<T>> {
@@ -68,14 +77,16 @@ export class ElasticProvider {
 
         try {
 
-            const response = await this.client.msearch({
+            const response = await this.client.msearch<T>({
                 body: Arrays.flat(queries)
             });
 
 
-            return response.body.responses.map(res => ({
-                total: res.hits.total.value,
-                results: res.hits.hits.map(x => Object.assign({_id: x._id}, x._source))
+            let responses = response.responses as MsearchMultiSearchItem<T>[]
+
+            return responses.map((res: MsearchMultiSearchItem) => ({
+                total: Numbers.isNumber(res.hits.total) ? res.hits.total : res.hits.total.value,
+                results: res.hits.hits.map<T>(x => Object.assign<any, any>({_id: x._id}, x._source))
             }));
 
         } catch (e) {
@@ -167,30 +178,29 @@ export class ElasticProvider {
         return queryBuilder.build();
     }
 
-    public async deleteByTime(opts: { index: string, type: string, field: string, seconds: number, format: string }) {
+    public async deleteByTime(opts: { index: string, type: string, field: string, seconds: number, format?: string }) {
         try {
-            let params: RequestParams.DeleteByQuery<any> = {
+
+            let result = await this.client.deleteByQuery({
                 index: opts.index,
                 conflicts: "proceed",
                 wait_for_completion: false,
                 body: {
-                    "query": {
-                        "bool": {
-                            "must": {
-                                "range": {
+                    query: {
+                        bool: {
+                            must: {
+                                range: {
                                     [opts.field]: {
                                         "lte": date().utc().subtract(opts.seconds, "seconds").format(opts.format)
                                     }
                                 }
                             }
-                        }
+                        } as any,
                     }
                 }
-            };
+            });
 
-            let {body} = await this.client.deleteByQuery(params);
-
-            return body;
+            return result;
 
         } catch (e) {
 
@@ -208,14 +218,14 @@ export class ElasticProvider {
 
         try {
 
-            const response = await this.client.search({
+            const response = await this.client.search<T>({
                 index: index,
                 body: params
             });
 
             return {
-                results: response.body.hits.hits.map(x => ({_id: x._id, ...x._source})),
-                total: response.body.hits.total.value
+                results: response.hits.hits.map(x => ({_id: x._id, ...x._source})),
+                total: Numbers.isNumber(response.hits.total) ? response.hits.total : response.hits.total.value
             };
         } catch (e) {
             this.logger.error(`failed to to run elastic search`, {params: JSON.stringify(params), e});
@@ -230,7 +240,7 @@ export class ElasticProvider {
             index: index,
         });
 
-        return (doc.body as unknown) as boolean;
+        return (doc as unknown) as boolean;
     }
 
     public async create<T extends object>(index: string, id: string, item: T) {

@@ -20,6 +20,6 @@ export interface IElasticSearchParams {
     page?: number,
     pageSize?: number
     sort?: { field: string, dir: ElasticSortDir }[]
-    filter?: { field: string, type?: "term" | "terms" | "match_phrase_prefix" | "match" | "match_phrase" | "fuzzy" | "prefix", value: string | number | boolean | any[] }[]
+    filter?: { field: string, type?: "term" | "terms" | "match_phrase_prefix" | "match" | "match_phrase" | "fuzzy" | "prefix" | "regexp", value: string | number | boolean | { [index: string]: any } }[]
     range?: { from?: string | number, to?: string | number, field: string }[]
 }
