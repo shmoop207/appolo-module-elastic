@@ -122,7 +122,7 @@ let ElasticProvider = class ElasticProvider {
                             "must": {
                                 "range": {
                                     [opts.field]: {
-                                        "lte": date_1.date().utc().subtract(opts.seconds, "seconds").format(opts.format)
+                                        "lte": (0, date_1.date)().utc().subtract(opts.seconds, "seconds").format(opts.format)
                                     }
                                 }
                             }
@@ -195,17 +195,17 @@ let ElasticProvider = class ElasticProvider {
     }
 };
 tslib_1.__decorate([
-    inject_1.inject()
+    (0, inject_1.inject)()
 ], ElasticProvider.prototype, "moduleOptions", void 0);
 tslib_1.__decorate([
-    inject_1.inject()
+    (0, inject_1.inject)()
 ], ElasticProvider.prototype, "logger", void 0);
 tslib_1.__decorate([
-    inject_1.init()
+    (0, inject_1.init)()
 ], ElasticProvider.prototype, "initialize", null);
 ElasticProvider = tslib_1.__decorate([
-    inject_1.define(),
-    inject_1.singleton()
+    (0, inject_1.define)(),
+    (0, inject_1.singleton)()
 ], ElasticProvider);
 exports.ElasticProvider = ElasticProvider;
 //# sourceMappingURL=elasticProvider.js.map
