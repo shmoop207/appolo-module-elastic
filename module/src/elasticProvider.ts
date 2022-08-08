@@ -97,7 +97,7 @@ export class ElasticProvider {
         let dto: any = {query: opts.query};
 
         if (opts.searchFields && opts.searchFields.length) {
-            dto.fields = opts.fields
+            dto.fields = opts.searchFields
         }
 
         let queryBuild = bodybuilder().query("multi_match", dto);
