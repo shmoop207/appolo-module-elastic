@@ -70,10 +70,16 @@ let ElasticProvider = class ElasticProvider {
         let queryBuild = bodybuilder().query("query_string", dto);
         return this.searchByQueryBuilder(queryBuild, opts);
     }
+    /**
+     * @deprecated use searchByQueryMulti.
+     */
     searchByQueryMultiFields(opts) {
         return this.searchByQuery(opts);
     }
-    searchByQueryMatchMultiFields(opts) {
+    searchByQueryMulti(opts) {
+        return this.searchByQuery(opts);
+    }
+    searchByMatchMulti(opts) {
         let dto = { query: opts.query };
         if (opts.searchFields && opts.searchFields.length) {
             dto.fields = opts.searchFields;

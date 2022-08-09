@@ -104,12 +104,18 @@ export class ElasticProvider {
 
         return this.searchByQueryBuilder(queryBuild, opts);
     }
-
+    /**
+     * @deprecated use searchByQueryMulti.
+     */
     public searchByQueryMultiFields<T>(opts: { query: string, searchFields?: string[] } & IElasticSearchParams): Promise<IElasticResult<T>> {
         return this.searchByQuery(opts);
     }
 
-    public searchByQueryMatchMultiFields<T>(opts: { query: string, searchFields?: string[] } & IElasticSearchParams): Promise<IElasticResult<T>> {
+    public searchByQueryMulti<T>(opts: { query: string, searchFields?: string[] } & IElasticSearchParams): Promise<IElasticResult<T>> {
+        return this.searchByQuery(opts);
+    }
+
+    public searchByMatchMulti<T>(opts: { query: string, searchFields?: string[] } & IElasticSearchParams): Promise<IElasticResult<T>> {
 
         let dto: any = {query: opts.query};
 
