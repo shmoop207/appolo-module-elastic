@@ -58,11 +58,22 @@ let ElasticProvider = class ElasticProvider {
             throw e;
         }
     }
-    searchByQuery(opts) {
+    searchByMatch(opts) {
         let queryBuild = bodybuilder().query("match", opts.searchField, opts.query);
         return this.searchByQueryBuilder(queryBuild, opts);
     }
+    searchByQuery(opts) {
+        let dto = { query: opts.query };
+        if (opts.searchFields && opts.searchFields.length) {
+            dto.fields = opts.searchFields;
+        }
+        let queryBuild = bodybuilder().query("query_string", dto);
+        return this.searchByQueryBuilder(queryBuild, opts);
+    }
     searchByQueryMultiFields(opts) {
+        return this.searchByQuery(opts);
+    }
+    searchByQueryMatchMultiFields(opts) {
         let dto = { query: opts.query };
         if (opts.searchFields && opts.searchFields.length) {
             dto.fields = opts.searchFields;

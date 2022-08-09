@@ -85,14 +85,31 @@ export class ElasticProvider {
 
     }
 
-    public searchByQuery<T>(opts: { query: string, searchField: string } & IElasticSearchParams): Promise<IElasticResult<T>> {
+    public searchByMatch<T>(opts: { query: string, searchField: string } & IElasticSearchParams): Promise<IElasticResult<T>> {
 
         let queryBuild = bodybuilder().query("match", opts.searchField, opts.query);
 
         return this.searchByQueryBuilder(queryBuild, opts);
     }
 
+    public searchByQuery<T>(opts: { query: string, searchFields?: string[] } & IElasticSearchParams): Promise<IElasticResult<T>> {
+
+        let dto: any = {query: opts.query};
+
+        if (opts.searchFields && opts.searchFields.length) {
+            dto.fields = opts.searchFields
+        }
+
+        let queryBuild = bodybuilder().query("query_string", dto);
+
+        return this.searchByQueryBuilder(queryBuild, opts);
+    }
+
     public searchByQueryMultiFields<T>(opts: { query: string, searchFields?: string[] } & IElasticSearchParams): Promise<IElasticResult<T>> {
+        return this.searchByQuery(opts);
+    }
+
+    public searchByQueryMatchMultiFields<T>(opts: { query: string, searchFields?: string[] } & IElasticSearchParams): Promise<IElasticResult<T>> {
 
         let dto: any = {query: opts.query};
 
